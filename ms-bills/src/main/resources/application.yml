@@ -1,0 +1,91 @@
+# Own property
+app:
+  keycloak:
+    host: http://localhost:8082/realms
+    realm: gamebox_ecommerce
+    client_id: ms-resources
+    client_secret: DDbAUbpjRRtAQnDpq1gzO8hQBud6ZBby
+    resource_id: ms-resources
+    jwk: ${app.keycloak.host}/${app.keycloak.realm}/protocol/openid-connect/certs
+    redirect_uri: http://localhost:${app.gateway.port}/login/oauth2/code/keycloak
+  gateway:
+    port: 9090
+  eureka:
+    instance_id: ${random.value}
+
+spring:
+  application:
+    name: ms-bills
+
+  # Database Configuration
+  datasource:
+    url: 'jdbc:h2:mem:ms-bills;DB_CLOSE_DELAY=-1'
+    driver-class-name: org.h2.Driver
+    username: user
+    password: user
+
+  # JPA Configuration
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    open-in-view: true
+
+  # H2 Configuration
+  h2:
+    console:
+      enabled: true
+      path: '/h2-console'
+
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: ${app.keycloak.host}/${app.keycloak.realm}
+        registration:
+          ms-resources:
+            provider: keycloak
+            client-id: ${app.keycloak.client_id}
+            client-secret: ${app.keycloak.client_secret}
+            redirect-uri: ${app.keycloak.redirect_uri}
+
+server:
+  port: 9091
+  servlet:
+    context-path: /api/v1
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    hostname: localhost
+    instance-id: ${spring.application.name}:${vcap.application.instance_id:${spring.application.instance_id:${server.port}:${app.eureka.instance_id}}}
+
+info:
+  realm: ${app.keycloak.realm}
+  app: ms-bills
+  description: Microservice for ${info.realm} realm bills management
+  version: 1.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

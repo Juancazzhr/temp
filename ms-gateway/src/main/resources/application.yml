@@ -1,0 +1,72 @@
+app:
+  keycloak:
+    host: http://localhost:8082/realms
+    realm: gamebox_ecommerce
+    client_id: ms-gateway
+    client_secret: A4NsizH9074OQFFJcuqJOlekSzIkS201
+    redirect_uri: http://localhost:${server.port}/login/oauth2/code/keycloak
+    jwk: ${app.keycloak.host}/${app.keycloak.realm}/protocol/openid-connect/certs
+  eureka:
+    instance_id: ${random.value}
+
+server:
+  port: 9090
+
+spring:
+  application:
+    name: ms-gateway
+
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: ${app.keycloak.host}/${app.keycloak.realm}
+        registration:
+          ms-gateway:
+            provider: keycloak
+            client-id: ${app.keycloak.client_id}
+            client-secret: ${app.keycloak.client_secret}
+            scope:
+              - openid
+            authorization-grant-type: authorization_code
+            redirect-uri: ${app.keycloak.redirect_uri}
+
+  cloud:
+    gateway:
+      default-filters:
+        - TokenRelay
+      routes:
+        - id: ms-bills
+          uri: lb://ms-bills
+          predicates:
+            - Path=/api/v1/bills/**
+        - id: ms-users
+          uri: lb://ms-users
+          predicates:
+            - Path=/api/v1/users/**
+
+      discovery:
+        locator:
+          enabled: true
+
+management:
+  endpoint:
+    gateway:
+      enabled: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    hostname: localhost
+    instance-id: ${spring.application.name}:${vcap.application.instance_id:${spring.application.instance_id:${server.port}:${app.eureka.instance_id}}}
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

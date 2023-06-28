@@ -1,0 +1,26 @@
+version: '3.9'
+name: gamebox_ecommerce
+
+services:
+  # Keycloak Server
+  keycloak:
+    container_name: keycloak-server
+    image: quay.io/keycloak/keycloak:21.0.1
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - '8082:8080'
+      - '8443:8443'
+    expose:
+      - '8082'
+      - '8443'
+    command: start-dev
+
+  # Eureka Server (ms-discovery)
+  eureka-server:
+    container_name: ms-discovery
+    build: ms-discovery
+    ports:
+      - '8761:8761'
+        

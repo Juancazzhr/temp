@@ -1,0 +1,11 @@
+app:
+  keycloak:
+    server_url: http://localhost:8082
+    realm: master
+    username: admin
+    password: admin
+    client_id: admin-cli
+
+spring:
+  application:
+    name: keycloak-admin-client
